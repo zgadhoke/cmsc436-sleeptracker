@@ -13,6 +13,8 @@ import HealthKit
 class ViewController: UIViewController {
     
     let healthStore = HKHealthStore()
+    var sleepTime = 0.0
+    var key = 0
     
     @IBOutlet var displayTimeLabel: UILabel!
     @IBOutlet weak var summaryButton: UIButton!
@@ -51,7 +53,7 @@ class ViewController: UIViewController {
             timer = Timer.scheduledTimer(timeInterval: 0.01, target: self, selector: aSelector, userInfo: nil, repeats: true)
             startTime = NSDate.timeIntervalSinceReferenceDate
         }
-        
+        key = 1
     }
     
     
@@ -60,6 +62,7 @@ class ViewController: UIViewController {
         saveSleep()
         getSleep()
         timer.invalidate()
+        key = 0
     }
     
     @objc func updateTime() {
@@ -102,13 +105,16 @@ class ViewController: UIViewController {
             // we create our new object we want to push in Health app
             let object = HKCategorySample(type:sleepType, value: HKCategoryValueSleepAnalysis.inBed.rawValue, start: self.alarmTime as Date, end: self.endTime as Date)
             
-//            let time = self.endTime.timeIntervalSince(self.alarmTime as Date)
-//            let hours = Int(time) / 3600
-//            let minutes = Int(time) / 60 % 60
-//            let seconds = Int(time) % 60
-//            let interval = String(format:"%02i:%02i:%02i", hours, minutes, seconds)
-            //print("interval: \(interval)" )
-            //summaryButton.setTitle("You Slept for \(interval)", for: .normal)
+            if key == 1 {
+                sleepTime += self.endTime.timeIntervalSince(self.alarmTime as Date)
+                let hours = Int(sleepTime) / 3600
+                let minutes = Int(sleepTime) / 60 % 60
+                let seconds = Int(sleepTime) % 60
+                let interval = String(format:"%02i:%02i:%02i", hours, minutes, seconds)
+                print("interval: \(interval)" )
+                summaryButton.setTitle("You Slept for a total of \(interval) today", for: .normal)
+                key = 0
+            }
             
             // at the end, we save it
             healthStore.save(object, withCompletion: { (success, error) -> Void in
